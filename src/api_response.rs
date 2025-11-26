@@ -1,4 +1,5 @@
 #![allow(unused)]
+use axum::http::StatusCode;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -35,6 +36,20 @@ impl ApiResponse {
         Self {
             code,
             message: message.into(),
+            data: Some(serde_json::to_value(data).unwrap()),
+        }
+    }
+    pub fn respond(status_code: StatusCode) -> Self {
+        Self {
+            code: status_code.as_u16(),
+            message: format!("{}.", status_code.canonical_reason().unwrap_or("Error")),
+            data: None,
+        }
+    }
+    pub fn respond_data<D: Serialize>(status_code: StatusCode, data: D) -> Self {
+        Self {
+            code: status_code.as_u16(),
+            message: format!("{}.", status_code.canonical_reason().unwrap_or("Error")),
             data: Some(serde_json::to_value(data).unwrap()),
         }
     }

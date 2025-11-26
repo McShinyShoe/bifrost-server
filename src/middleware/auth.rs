@@ -23,10 +23,7 @@ pub async fn auth_middleware(
     let Some(auth) = auth_header else {
         return Err((
             StatusCode::UNAUTHORIZED,
-            Json(ApiResponse::error(
-                StatusCode::UNAUTHORIZED.canonical_reason().unwrap_or("Error"),
-                StatusCode::UNAUTHORIZED.as_u16(),
-            )),
+            Json(ApiResponse::respond(StatusCode::UNAUTHORIZED)),
         ));
     };
 
@@ -41,10 +38,7 @@ pub async fn auth_middleware(
     let _ = decoded.map_err(|_| {
         (
             StatusCode::UNAUTHORIZED,
-            Json(ApiResponse::error(
-                StatusCode::UNAUTHORIZED.canonical_reason().unwrap_or("Error"),
-                StatusCode::UNAUTHORIZED.as_u16(),
-            )),
+            Json(ApiResponse::respond(StatusCode::UNAUTHORIZED)),
         )
     })?;
 
