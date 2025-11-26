@@ -4,21 +4,18 @@ mod handler;
 mod middleware;
 mod response;
 
-use crate::{
-    app_state::{AppState, AppStateStore},
-    handler::login::login_handler,
-    response::Response,
-};
 use axum::{
-    Json, Router,
-    extract::State,
+    Router,
     middleware::from_fn_with_state,
     routing::{get, post},
 };
 use std::{collections::HashMap, sync::Arc};
 use tokio::{net::TcpListener, sync::RwLock};
 
-use axum::response::IntoResponse;
+use crate::{
+    app_state::{AppState},
+    handler::{login::login_handler, hello::hello_handler},
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -33,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/login", post(login_handler))
         .route(
             "/hello",
-            get(hello).layer(from_fn_with_state(
+            get(hello_handler).layer(from_fn_with_state(
                 state.clone(),
                 middleware::auth::auth_middleware,
             )),
@@ -44,7 +41,4 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-async fn hello(State(_): State<AppStateStore>) -> impl IntoResponse {
-    Json(Response::ok("Hello! You passed authentication."))
 }

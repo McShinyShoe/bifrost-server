@@ -23,7 +23,6 @@ pub async fn auth_middleware(
         return Err(StatusCode::UNAUTHORIZED);
     };
 
-    // Expect: "Bearer <token>"
     let token = auth.strip_prefix("Bearer ").unwrap_or("");
 
     let decoded = decode::<Claims>(
