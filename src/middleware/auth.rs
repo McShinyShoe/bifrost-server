@@ -3,8 +3,7 @@ use axum::{
     body::Body,
     extract::State,
     http::{Request, StatusCode},
-    middleware::Next,
-    response::Response,
+    middleware::Next, response::IntoResponse,
 };
 
 use crate::{api_response::ApiResponse, app_state::AppStateStore, claims::Claims};
@@ -14,7 +13,7 @@ pub async fn auth_middleware(
     State(state): State<AppStateStore>,
     req: Request<Body>,
     next: Next,
-) -> Result<Response, (StatusCode, Json<ApiResponse>)> {
+) -> Result<impl IntoResponse, (StatusCode, Json<ApiResponse>)> {
     let auth_header = req
         .headers()
         .get("Authorization")

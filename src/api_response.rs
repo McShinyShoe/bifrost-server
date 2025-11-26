@@ -1,5 +1,5 @@
 #![allow(unused)]
-use axum::http::StatusCode;
+use axum::{Json, http::StatusCode};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -54,3 +54,6 @@ impl ApiResponse {
         }
     }
 }
+
+pub type JsonApiResponse = Json<ApiResponse>;
+pub type ResultApiResponse = Result<Json<ApiResponse>, (StatusCode, Json<ApiResponse>)>;

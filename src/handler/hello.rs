@@ -1,7 +1,7 @@
-use axum::{Json, extract::State, response::IntoResponse};
+use axum::{Json, extract::State};
 
-use crate::{app_state::AppStateStore, api_response::ApiResponse};
+use crate::{api_response::{ApiResponse, JsonApiResponse}, app_state::AppStateStore};
 
-pub async fn hello_handler(State(_): State<AppStateStore>) -> impl IntoResponse {
+pub async fn hello_handler(State(_): State<AppStateStore>) -> JsonApiResponse {
     Json(ApiResponse::ok("Hello World."))
 }

@@ -1,10 +1,10 @@
-use axum::{Json, extract::State};
+use axum::{Json, extract::State, http::StatusCode, response::Response,};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::{app_state::AppStateStore, claims::Claims, api_response::ApiResponse};
+use crate::{api_response::{ApiResponse, ResultApiResponse}, app_state::AppStateStore, claims::Claims};
 
 #[derive(Deserialize)]
 pub struct LoginInput {
@@ -15,9 +15,9 @@ pub struct LoginInput {
 pub async fn login_handler(
     State(state): State<AppStateStore>,
     Json(body): Json<LoginInput>,
-) -> Json<ApiResponse> {
+) -> ResultApiResponse {
     if body.username != "admin" || body.password != "password" {
-        return Json(ApiResponse::error("wrong username/password", 500));
+        return Err((StatusCode::UNAUTHORIZED, Json(ApiResponse::error("Wrong username or password", StatusCode::UNAUTHORIZED.as_u16()))));
     }
 
     let expiration = (Utc::now() + Duration::hours(24)).timestamp() as usize;
@@ -34,8 +34,8 @@ pub async fn login_handler(
     )
     .unwrap();
 
-    Json(ApiResponse::ok_data(
+    Ok(Json(ApiResponse::ok_data(
         "Login successfull.",
         json!({ "token": token }),
-    ))
+    )))
 }
