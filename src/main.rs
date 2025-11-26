@@ -3,6 +3,7 @@ mod claims;
 mod handler;
 mod middleware;
 mod response;
+mod status;
 
 use axum::{
     Router,
@@ -13,8 +14,8 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::{net::TcpListener, sync::RwLock};
 
 use crate::{
-    app_state::{AppState},
-    handler::{login::login_handler, hello::hello_handler},
+    app_state::AppState,
+    handler::{hello::hello_handler, login::login_handler, status::{status_get_handler, status_update_handler}}, status::Status,
 };
 
 #[tokio::main]
@@ -24,6 +25,10 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(RwLock::new(AppState {
         sessions: HashMap::new(),
         secret: "SECRET".to_owned(),
+        status: Status {
+            humidity: 0.0,
+            temprature: 0.0,
+        }
     }));
 
     let app = Router::new()
@@ -34,6 +39,16 @@ async fn main() -> anyhow::Result<()> {
                 state.clone(),
                 middleware::auth::auth_middleware,
             )),
+        )
+        .route("/status", get(status_get_handler).layer(from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware,
+            ))
+        )
+        .route("/status", post(status_update_handler).layer(from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware,
+            ))
         )
         .with_state(state);
 
