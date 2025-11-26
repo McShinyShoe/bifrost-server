@@ -1,4 +1,4 @@
-use axum::{Json, extract::State, http::StatusCode, response::Response,};
+use axum::{Json, extract::State, http::StatusCode};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Deserialize;
