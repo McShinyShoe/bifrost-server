@@ -12,11 +12,11 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn from_env() -> Self {
-        dotenvy::dotenv().ok(); // load .env if present
+        dotenvy::dotenv().ok();
 
         Config::builder()
-            .add_source(File::with_name("Config").required(false)) // optional
-            .add_source(Environment::default()) // loads from ENV VARs
+            .add_source(File::with_name("Config").required(false))
+            .add_source(Environment::default())
             .build()
             .unwrap()
             .try_deserialize()
