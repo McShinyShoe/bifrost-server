@@ -1,4 +1,5 @@
 use axum::{
+    Json,
     body::Body,
     extract::State,
     http::{Request, StatusCode},
@@ -6,21 +7,27 @@ use axum::{
     response::Response,
 };
 
-use crate::{app_state::AppStateStore, claims::Claims};
+use crate::{api_response::ApiResponse, app_state::AppStateStore, claims::Claims};
 use jsonwebtoken::{DecodingKey, Validation, decode};
 
 pub async fn auth_middleware(
     State(state): State<AppStateStore>,
     req: Request<Body>,
     next: Next,
-) -> Result<Response, StatusCode> {
+) -> Result<Response, (StatusCode, Json<ApiResponse>)> {
     let auth_header = req
         .headers()
         .get("Authorization")
         .and_then(|v| v.to_str().ok());
 
     let Some(auth) = auth_header else {
-        return Err(StatusCode::UNAUTHORIZED);
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ApiResponse::error(
+                StatusCode::UNAUTHORIZED.canonical_reason().unwrap_or("Error"),
+                StatusCode::UNAUTHORIZED.as_u16(),
+            )),
+        ));
     };
 
     let token = auth.strip_prefix("Bearer ").unwrap_or("");
@@ -31,7 +38,15 @@ pub async fn auth_middleware(
         &Validation::default(),
     );
 
-    let _ = decoded.map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let _ = decoded.map_err(|_| {
+        (
+            StatusCode::UNAUTHORIZED,
+            Json(ApiResponse::error(
+                StatusCode::UNAUTHORIZED.canonical_reason().unwrap_or("Error"),
+                StatusCode::UNAUTHORIZED.as_u16(),
+            )),
+        )
+    })?;
 
     Ok(next.run(req).await)
 }
