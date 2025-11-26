@@ -2,7 +2,7 @@ mod app_state;
 mod claims;
 mod handler;
 mod middleware;
-mod response;
+mod api_response;
 mod status;
 
 use axum::{

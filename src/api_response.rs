@@ -2,13 +2,13 @@
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct Response {
+pub struct ApiResponse {
     pub code: u16,
     pub message: String,
     pub data: Option<serde_json::Value>,
 }
 
-impl Response {
+impl ApiResponse {
     pub fn ok(message: impl Into<String>) -> Self {
         Self {
             code: 200,

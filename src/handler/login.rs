@@ -4,7 +4,7 @@ use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::{app_state::AppStateStore, claims::Claims, response::Response};
+use crate::{app_state::AppStateStore, claims::Claims, api_response::ApiResponse};
 
 #[derive(Deserialize)]
 pub struct LoginInput {
@@ -15,9 +15,9 @@ pub struct LoginInput {
 pub async fn login_handler(
     State(state): State<AppStateStore>,
     Json(body): Json<LoginInput>,
-) -> Json<Response> {
+) -> Json<ApiResponse> {
     if body.username != "admin" || body.password != "password" {
-        return Json(Response::error("wrong username/password", 500));
+        return Json(ApiResponse::error("wrong username/password", 500));
     }
 
     let expiration = (Utc::now() + Duration::hours(24)).timestamp() as usize;
@@ -34,7 +34,7 @@ pub async fn login_handler(
     )
     .unwrap();
 
-    Json(Response::ok_data(
+    Json(ApiResponse::ok_data(
         "Login successfull.",
         json!({ "token": token }),
     ))
