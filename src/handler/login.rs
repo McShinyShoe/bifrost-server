@@ -16,8 +16,9 @@ pub async fn login_handler(
     State(state): State<AppStateStore>,
     Json(body): Json<LoginInput>,
 ) -> ResultApiResponse {
-    if body.username != "admin" || body.password != "password" {
-        return Err((StatusCode::UNAUTHORIZED, Json(ApiResponse::error("Wrong username or password", StatusCode::UNAUTHORIZED.as_u16()))));
+    let config = state.read().await.config.clone();
+    if body.username != config.username || body.password != config.password {
+        return Err((StatusCode::UNAUTHORIZED, Json(ApiResponse::error("Wrong username or password.", StatusCode::UNAUTHORIZED.as_u16()))));
     }
 
     let expiration = (Utc::now() + Duration::hours(24)).timestamp() as usize;
