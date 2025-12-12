@@ -31,8 +31,8 @@ async fn main() -> anyhow::Result<()> {
         status: Status {
             humidity: None,
             temprature: None,
-            mainroom_status: None,
-            bathroom_status: None,
+            mainroom_status: Some(false),
+            bathroom_status: Some(false),
         },
         config: config,
     }));
