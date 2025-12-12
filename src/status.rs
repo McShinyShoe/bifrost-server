@@ -6,4 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct Status {
     pub humidity: Option<f64>,
     pub temprature: Option<f64>,
+    pub mainroom_status: Option<bool>,
+    pub bathroom_status: Option<bool>,
 }

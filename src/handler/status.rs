@@ -15,8 +15,7 @@ pub async fn status_put_handler(
 ) -> impl IntoResponse {
     let mut guard = state.write().await;
 
-    guard.status.humidity = body.humidity;
-    guard.status.temprature = body.temprature;
+    guard.status = body;
 
     Json(ApiResponse::ok_data(
         "Status updated.",
@@ -35,6 +34,14 @@ pub async fn status_patch_handler(
     
     if let Some(t) = body.temprature {
         guard.status.temprature = Some(t);
+    }
+    
+    if let Some(ms) = body.mainroom_status {
+        guard.status.mainroom_status = Some(ms);
+    }
+    
+    if let Some(bs) = body.bathroom_status {
+        guard.status.bathroom_status = Some(bs);
     }
 
     Json(ApiResponse::ok_data(
