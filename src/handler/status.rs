@@ -9,7 +9,7 @@ pub async fn status_get_handler(State(state): State<AppStateStore>) -> JsonApiRe
         json!(state.read().await.status),
     ))
 }
-pub async fn status_update_handler(
+pub async fn status_put_handler(
     State(state): State<AppStateStore>,
     Json(body): Json<Status>,
 ) -> impl IntoResponse {
@@ -17,6 +17,25 @@ pub async fn status_update_handler(
 
     guard.status.humidity = body.humidity;
     guard.status.temprature = body.temprature;
+
+    Json(ApiResponse::ok_data(
+        "Status updated.",
+        json!(guard.status.clone()),
+    ))
+}
+pub async fn status_patch_handler(
+    State(state): State<AppStateStore>,
+    Json(body): Json<Status>,
+) -> impl IntoResponse {
+    let mut guard = state.write().await;
+
+    if let Some(h) = body.humidity {
+        guard.status.humidity = Some(h);
+    }
+    
+    if let Some(t) = body.temprature {
+        guard.status.temprature = Some(t);
+    }
 
     Json(ApiResponse::ok_data(
         "Status updated.",

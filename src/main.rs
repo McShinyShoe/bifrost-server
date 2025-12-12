@@ -9,13 +9,13 @@ mod appconfig;
 use axum::{
     Router,
     middleware::from_fn_with_state,
-    routing::{get, post},
+    routing::{get, post, put, patch},
 };
 use std::{collections::HashMap, sync::Arc};
 use tokio::{net::TcpListener, sync::RwLock};
 
 use crate::{
-    app_state::AppState, appconfig::AppConfig, handler::{hello::hello_handler, login::login_handler, status::{status_get_handler, status_update_handler}}, status::Status
+    app_state::AppState, appconfig::AppConfig, handler::{hello::hello_handler, login::login_handler, status::{status_get_handler, status_patch_handler, status_put_handler}}, status::Status
 };
 
 #[tokio::main]
@@ -48,7 +48,12 @@ async fn main() -> anyhow::Result<()> {
                 middleware::auth::auth_middleware,
             ))
         )
-        .route("/status", post(status_update_handler).layer(from_fn_with_state(
+        .route("/status", put(status_put_handler).layer(from_fn_with_state(
+                state.clone(),
+                middleware::auth::auth_middleware,
+            ))
+        )
+        .route("/status", patch(status_patch_handler).layer(from_fn_with_state(
                 state.clone(),
                 middleware::auth::auth_middleware,
             ))
