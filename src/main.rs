@@ -29,8 +29,8 @@ async fn main() -> anyhow::Result<()> {
         sessions: HashMap::new(),
         secret: "SECRET".to_owned(),
         status: Status {
-            humidity: 0.0,
-            temprature: 0.0,
+            humidity: None,
+            temprature: None,
         },
         config: config,
     }));
