@@ -5,6 +5,7 @@ mod middleware;
 mod api_response;
 mod status;
 mod appconfig;
+mod db;
 
 use axum::{
     Router,
@@ -15,7 +16,7 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::{net::TcpListener, sync::RwLock};
 
 use crate::{
-    app_state::AppState, appconfig::AppConfig, handler::{hello::hello_handler, login::login_handler, status::{status_get_handler, status_patch_handler, status_put_handler}}, status::Status
+    app_state::AppState, appconfig::AppConfig, handler::{hello::hello_handler, login::login_handler, status::{status_get_handler, status_patch_handler, status_put_handler}}
 };
 
 #[tokio::main]
@@ -25,17 +26,17 @@ async fn main() -> anyhow::Result<()> {
     let config = AppConfig::from_env();
     let addr = format!("0.0.0.0:{}", config.port);
 
+    let db = db::make_connection("database.db")?;
+    let status = db::get_status(&db)?;
+
     let state = Arc::new(RwLock::new(AppState {
         sessions: HashMap::new(),
         secret: "SECRET".to_owned(),
-        status: Status {
-            humidity: None,
-            temprature: None,
-            mainroom_status: Some(false),
-            bathroom_status: Some(false),
-        },
+        status: status,
         config: config,
+        db: Arc::new(tokio::sync::Mutex::new(db))
     }));
+
     let app = Router::new()
         .route("/login", post(login_handler))
         .route(
