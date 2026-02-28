@@ -12,7 +12,7 @@ use axum::{
     middleware::from_fn_with_state,
     routing::{get, post, put, patch},
 };
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, fs, sync::Arc};
 use tokio::{net::TcpListener, sync::RwLock};
 
 use crate::{
@@ -26,7 +26,8 @@ async fn main() -> anyhow::Result<()> {
     let config = AppConfig::from_env();
     let addr = format!("0.0.0.0:{}", config.port);
 
-    let db = db::make_connection("database.db")?;
+    fs::create_dir_all("/var/lib/bifrost")?;
+    let db = db::make_connection("/var/lib/bifrost/database.db")?;
     let status = db::get_status(&db)?;
 
     let state = Arc::new(RwLock::new(AppState {
