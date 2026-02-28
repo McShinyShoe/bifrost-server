@@ -9,59 +9,76 @@ pub async fn status_get_handler(State(state): State<AppStateStore>) -> JsonApiRe
         json!(state.read().await.status),
     ))
 }
+
 pub async fn status_put_handler(
     State(state): State<AppStateStore>,
     Json(body): Json<Status>,
 ) -> impl IntoResponse {
-    let mut guard = state.write().await;
+    let db = {
+        let guard = state.read().await;
+        guard.db.clone()
+    };
 
-    guard.status = body;
-    let db = guard.db.clone();
+    if let Err(err) = {
+        let conn = db.lock().await;
+        db::save_state(&conn, &body)
+    } {
+        return Json(ApiResponse::error(
+            format!("Database error: {err}"),
+            500,
+        ));
+    }
 
-    match db::save_state(&*db.lock().await, &guard.status) {
-        Ok(_) => {}
-        Err(err) => {
-            ApiResponse::error(format!("Database Error: {}", err.to_string()), 500);
-        }
+    {
+        let mut guard = state.write().await;
+        guard.status = body.clone();
     }
 
     Json(ApiResponse::ok_data(
         "Status updated.",
-        json!(guard.status.clone()),
+        json!(body),
     ))
 }
+
 pub async fn status_patch_handler(
     State(state): State<AppStateStore>,
     Json(body): Json<Status>,
 ) -> impl IntoResponse {
-    let mut guard = state.write().await;
-    let db = guard.db.clone();
+    let (db, mut next_status) = {
+        let guard = state.read().await;
+        (guard.db.clone(), guard.status.clone())
+    };
 
     if let Some(h) = body.humidity {
-        guard.status.humidity = Some(h);
+        next_status.humidity = Some(h);
     }
-    
     if let Some(t) = body.temprature {
-        guard.status.temprature = Some(t);
+        next_status.temprature = Some(t);
     }
-    
     if let Some(ms) = body.mainroom_status {
-        guard.status.mainroom_status = Some(ms);
+        next_status.mainroom_status = Some(ms);
     }
-    
     if let Some(bs) = body.bathroom_status {
-        guard.status.bathroom_status = Some(bs);
+        next_status.bathroom_status = Some(bs);
     }
 
-    match db::save_state(&*db.lock().await, &guard.status) {
-        Ok(_) => {}
-        Err(err) => {
-            ApiResponse::error(format!("Database Error: {}", err.to_string()), 500);
-        }
+    if let Err(err) = {
+        let conn = db.lock().await;
+        db::save_state(&conn, &next_status)
+    } {
+        return Json(ApiResponse::error(
+            format!("Database error: {err}"),
+            500,
+        ));
+    }
+
+    {
+        let mut guard = state.write().await;
+        guard.status = next_status.clone();
     }
 
     Json(ApiResponse::ok_data(
         "Status updated.",
-        json!(guard.status.clone()),
+        json!(next_status),
     ))
 }
