@@ -1956,6 +1956,8 @@ dependencies = [
  "leptos",
  "leptos_axum",
  "log",
+ "serde",
+ "serde_json",
  "simple_logger",
  "tokio",
  "tower",

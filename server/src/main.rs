@@ -4,6 +4,9 @@ use leptos_axum::{generate_route_list, LeptosRoutes};
 use app::*;
 use leptos::logging::log;
 
+mod api;
+mod home_state;
+
 #[tokio::main]
 async fn main() {
 
@@ -14,6 +17,7 @@ async fn main() {
     let routes = generate_route_list(App);
 
     let app = Router::new()
+        .nest("/api", api::router())
         .leptos_routes(&leptos_options, routes, {
             let leptos_options = leptos_options.clone();
             move || shell(leptos_options.clone())
