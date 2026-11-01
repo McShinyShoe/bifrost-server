@@ -8,7 +8,7 @@ use tokio::net::TcpStream;
 use tokio::sync::Notify;
 use tokio::time::timeout;
 
-const DEFAULT_SENSOR_ADDR: &str = "10.10.0.50:80";
+const DEFAULT_SENSOR_ADDR: &str = "10.10.0.5:80";
 const TIMEOUT: Duration = Duration::from_secs(5);
 
 pub static SENSOR_ADDR: LazyLock<String> = LazyLock::new(|| {
