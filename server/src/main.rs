@@ -6,6 +6,7 @@ use leptos::logging::log;
 
 mod api;
 mod home_state;
+mod sensor;
 
 #[tokio::main]
 async fn main() {
@@ -25,9 +26,12 @@ async fn main() {
         .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(leptos_options);
 
+    tokio::spawn(sensor::run_background_polls());
+
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
     log!("listening on http://{}", &addr);
+    log!("using webhook at http://{}/poll", *sensor::SENSOR_ADDR);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app.into_make_service())
         .await

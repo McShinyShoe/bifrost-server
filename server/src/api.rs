@@ -1,12 +1,14 @@
+use std::io;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::extract::Path;
 use axum::http::StatusCode;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde::Deserialize;
 
 use crate::home_state::{AcCommand, HOME_STATE};
+use crate::sensor;
 
 type ApiError = (StatusCode, String);
 
@@ -16,6 +18,15 @@ fn internal(e: std::io::Error) -> ApiError {
 
 fn no_command(id: u32) -> ApiError {
     (StatusCode::NOT_FOUND, format!("no command with id {id}"))
+}
+
+fn sensor_unreachable(e: io::Error) -> ApiError {
+    let status = if e.kind() == io::ErrorKind::TimedOut {
+        StatusCode::GATEWAY_TIMEOUT
+    } else {
+        StatusCode::BAD_GATEWAY
+    };
+    (status, format!("couldnt tell the sensor at {} to poll: {e}", *sensor::SENSOR_ADDR))
 }
 
 pub fn router<S: Clone + Send + Sync + 'static>() -> Router<S> {
@@ -32,6 +43,7 @@ pub fn router<S: Clone + Send + Sync + 'static>() -> Router<S> {
             "/ac/command/{id}",
             get(get_command).put(put_command).delete(delete_command),
         )
+        .route("/ac/commit", post(commit))
 }
 
 async fn get_mainroom() -> Result<Json<bool>, ApiError> {
@@ -126,6 +138,7 @@ async fn post_command(
         .update_with(|s| s.ac.push(command, timestamp))
         .await
         .map_err(internal)?;
+    sensor::request_poll_later();
     Ok((StatusCode::CREATED, Json(entry)))
 }
 
@@ -137,6 +150,7 @@ async fn put_commands(
         .update_with(|s| s.ac.replace(commands.into_iter().map(|c| c.into_parts(now))))
         .await
         .map_err(internal)?;
+    sensor::request_poll_later();
     Ok(Json(queue))
 }
 
@@ -164,4 +178,9 @@ async fn delete_command(Path(id): Path<u32>) -> Result<Json<AcCommand>, ApiError
         .map_err(internal)?
         .map(Json)
         .ok_or_else(|| no_command(id))
+}
+
+async fn commit() -> Result<StatusCode, ApiError> {
+    sensor::request_poll().await.map_err(sensor_unreachable)?;
+    Ok(StatusCode::ACCEPTED)
 }
