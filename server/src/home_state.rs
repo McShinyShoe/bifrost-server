@@ -24,7 +24,7 @@ pub struct Light {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Sensor {
-    pub temprature: f32,
+    pub temperature: f32,
     pub humidity: f32,
 }
 

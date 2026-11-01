@@ -14,7 +14,7 @@ pub fn router<S: Clone + Send + Sync + 'static>() -> Router<S> {
     Router::new()
         .route("/light/mainroom", get(get_mainroom).put(put_mainroom))
         .route("/light/bathroom", get(get_bathroom).put(put_bathroom))
-        .route("/sensor/temprature", get(get_temprature).put(put_temprature))
+        .route("/sensor/temperature", get(get_temperature).put(put_temperature))
         .route("/sensor/humidity", get(get_humidity).put(put_humidity))
 }
 
@@ -44,17 +44,17 @@ async fn put_bathroom(Json(value): Json<bool>) -> Result<Json<bool>, ApiError> {
     Ok(Json(state.light.bathroom))
 }
 
-async fn get_temprature() -> Result<Json<f32>, ApiError> {
+async fn get_temperature() -> Result<Json<f32>, ApiError> {
     let state = HOME_STATE.read().await.map_err(internal)?;
-    Ok(Json(state.sensor.temprature))
+    Ok(Json(state.sensor.temperature))
 }
 
-async fn put_temprature(Json(value): Json<f32>) -> Result<Json<f32>, ApiError> {
+async fn put_temperature(Json(value): Json<f32>) -> Result<Json<f32>, ApiError> {
     let state = HOME_STATE
-        .update(|s| s.sensor.temprature = value)
+        .update(|s| s.sensor.temperature = value)
         .await
         .map_err(internal)?;
-    Ok(Json(state.sensor.temprature))
+    Ok(Json(state.sensor.temperature))
 }
 
 async fn get_humidity() -> Result<Json<f32>, ApiError> {
